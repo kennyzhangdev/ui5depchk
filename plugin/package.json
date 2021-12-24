@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "request": "^2.88.2",
-    "requireindex": "^1.2.0"
+    "requireindex": "^1.2.0",
+    "sync-request": "^6.1.0"
   },
   "devDependencies": {
     "eslint": "^8.0.1",

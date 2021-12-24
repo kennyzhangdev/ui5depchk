@@ -10,7 +10,10 @@ sap.ui.define(
     "../model/formatter",
     "../model/models",
     "sap/m/MessageToast",
-    "sap/suite/ui/commons/ChartContainerContent"
+    "sap/suite/ui/commons/ChartContainerContent",
+    "sap/ui/app",
+    "sap/ui/model/odata/ODataModel",
+    "sap/ui/table/Table"
   ],
   function (
     jQuery,
@@ -23,17 +26,30 @@ sap.ui.define(
     formatter,
     models,
     MessageToast,
-    ChartContainerContent
+    ChartContainerContent,
+    App,
+    ODataModel,
+    Table
   ) {
     "use strict";
 
-    return Controller.extend("jk.sd.ModelMonthSales.controller.Root", {
+    return Controller.extend("sd.ModelMonthSales.controller.Root", {
       formatter: formatter,
-      _rootPath: jQuery.sap.getModulePath("jk.sd.ModelMonthSales"),
+      _rootPath: jQuery.sap.getModulePath("sd.ModelMonthSales"),
 
       onInit: function () {
+        var oTestTable = new Table();
+        this.testTable2 = new Table();
         this.aLastYearMonth = [];
         this.aCurrentYearMonth = [];
+
+        var oModel = new ODataModel();
+        this._oModel2 = new ODataModel();
+        var oModel3 = new sap.ui.model.odata.ODataModel();
+        var sNavMode = oTestTable.getNavigationMode();
+        var iSelectedIndex = oTestTable.getSelectedIndex();
+        var oTest2Table = oTestTable;
+        var iTest2 = oTest2Table.getSelectedIndex();
         this.aFullYearMonth = [];
         this.getView().setModel(new JSONModel(), "salesModel");
         this._oResourceBundle = this.getOwnerComponent()
@@ -85,7 +101,7 @@ sap.ui.define(
        */
       generateVizContent: function (sFragmentKey) {
         var oVizColumnTable = sap.ui.xmlfragment(
-          "jk.sd.ModelMonthSales.view.fragment." + sFragmentKey,
+          "sd.ModelMonthSales.view.fragment." + sFragmentKey,
           this
         );
         oVizColumnTable.setModel(
@@ -135,6 +151,8 @@ sap.ui.define(
           1
         );
         var sYearTitle, sYoYTitle;
+        var oTest;
+        oTest = new Table();
 
         if (dYearMonth.getMonth() !== 1) {
           sYearTitle =
