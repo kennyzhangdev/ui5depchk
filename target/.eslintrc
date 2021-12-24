@@ -1,0 +1,9 @@
+{
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "rules": {
+    "ui5depchk/no-deprecated-api": "warn"
+  },
+  "plugins": ["ui5depchk"]
+}
