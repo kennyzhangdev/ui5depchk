@@ -190,17 +190,19 @@ module.exports = {
     }
 
     function validateMethod(node) {
-      if (
-        !node.callee ||
-        !node.callee.object ||
-        node.callee.object.type !== "Identifier"
-      ) {
+      if (!node.callee || !node.callee.object) {
         return;
       }
-
-      var sVariableName = node.callee.object.name;
-      var sStdModule = mVariableModule[sVariableName];
-      var sMethodName = node.callee.property.name;
+      var sStdModule;
+      //jQuery.sap.log
+      if (node.callee.object.type === "MemberExpression") {
+        sStdModule = _ModuleFromMemberExpression(node.callee, "");
+        //Todo: check jQuery.sap.log
+      } else if (node.callee.object.type === "Identifier") {
+        var sVariableName = node.callee.object.name;
+        sStdModule = mVariableModule[sVariableName];
+        var sMethodName = node.callee.property.name;
+      }
       checkDeprecation(node, sStdModule, sMethodName);
     }
 

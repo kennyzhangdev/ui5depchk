@@ -42,7 +42,7 @@ sap.ui.define(
         this.testTable2 = new Table();
         this.aLastYearMonth = [];
         this.aCurrentYearMonth = [];
-
+        jQuery.sap.log("test");
         var oModel = new ODataModel();
         this._oModel2 = new ODataModel();
         var oModel3 = new sap.ui.model.odata.ODataModel();
