@@ -38,11 +38,16 @@ sap.ui.define(
       _rootPath: jQuery.sap.getModulePath("sd.ModelMonthSales"),
 
       onInit: function () {
+        var oDateFormat = DateFormat.getDateTimeInstance({
+          pattern: "yyyyMMdd"
+        });
+
         var oTestTable = new Table();
         this.testTable2 = new Table();
         this.aLastYearMonth = [];
         this.aCurrentYearMonth = [];
-        jQuery.sap.log("test");
+        jQuery.sap.log.debug("test");
+        sap.m.MessageToast.show("test");
         var oModel = new ODataModel();
         this._oModel2 = new ODataModel();
         var oModel3 = new sap.ui.model.odata.ODataModel();

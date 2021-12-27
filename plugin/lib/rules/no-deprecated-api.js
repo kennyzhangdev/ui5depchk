@@ -87,6 +87,12 @@ module.exports = {
       }
     }
     function checkDeprecation(node, module, method) {
+      // console.log("-------------------------------------------");
+      // console.log(node.loc.start.line + "|" + module + "|" + method);
+
+      if (!module) {
+        return;
+      }
       if (mDeprecated[module] && mDeprecated[module]["controlDeprecated"]) {
         context.report({
           node: node,
@@ -175,7 +181,7 @@ module.exports = {
         sVariableName = node.left.property.name;
       }
       if (node.right.type !== "NewExpression") {
-        return; //Todo: var b = new Table(); var a = b;
+        return;
       }
 
       var sClassName = node.right.callee.name;
@@ -193,17 +199,41 @@ module.exports = {
       if (!node.callee || !node.callee.object) {
         return;
       }
-      var sStdModule;
-      //jQuery.sap.log
+      var sStdModule, sMethodName;
+
+      // if (node.loc.start.line === 1092) {
+      //   console.log("debug");
+      // }
+
+      //Check static method jQuery.sap.log.debug("123");
       if (node.callee.object.type === "MemberExpression") {
-        sStdModule = _ModuleFromMemberExpression(node.callee, "");
-        //Todo: check jQuery.sap.log
+        //Variable method like this.oTable.getSelectedIndex() should also process
+        let sModuleMethod = _ModuleFromMemberExpression(node.callee, "");
+        [sStdModule, sMethodName] = _staticModuleMethod(sModuleMethod); //sStdModule may also be variable name
+        if (mVariableModule[sStdModule]) {
+          sStdModule = mVariableModule[sStdModule];
+        }
       } else if (node.callee.object.type === "Identifier") {
         var sVariableName = node.callee.object.name;
         sStdModule = mVariableModule[sVariableName];
-        var sMethodName = node.callee.property.name;
+        if (!sStdModule) {
+          sStdModule = mModule[sVariableName]; //Code like: Controller.extend
+        }
+        sMethodName = node.callee.property.name;
       }
       checkDeprecation(node, sStdModule, sMethodName);
+    }
+
+    function _staticModuleMethod(sModuleMethod) {
+      let lastIndex = sModuleMethod.lastIndexOf(".");
+      if (lastIndex === -1) {
+        return [null, null];
+      } else {
+        return [
+          sModuleMethod.substr(0, lastIndex),
+          sModuleMethod.substr(lastIndex + 1)
+        ];
+      }
     }
 
     //extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
@@ -215,6 +245,8 @@ module.exports = {
             ? node.property.name
             : node.property.name + "." + sChildName
         );
+      } else if (node.type === "ThisExpression") {
+        return sChildName;
       } else {
         return sChildName === "" ? node.name : node.name + "." + sChildName;
       }
@@ -237,7 +269,6 @@ module.exports = {
       CallExpression(node) {
         validateMethod(node);
       }
-      //Todo validate static method
     };
   }
 };
