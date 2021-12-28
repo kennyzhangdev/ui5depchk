@@ -1,7 +1,3 @@
-# ui5depchk
-
-This is a custom plugin to check deprecated UI5 API usage. Source code is in plugin folder.
-
 # eslint-plugin-ui5depchk
 
 Check deprecated API usage for a specific SAPUI5 version
@@ -51,6 +47,7 @@ Add parameter ui5version if you want to check against a specific SAPUI5 version.
 ```
 
 Use .eslintignore to ignore non-SAPUI5 code to avoid unexpected error.
+If you see "plugin is loading initial data", just retry. This only happens for the first time plugin loaded.
 
 ## Supported Rules
 

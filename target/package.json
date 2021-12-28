@@ -12,9 +12,5 @@
   "devDependencies": {
     "eslint": "^8.5.0",
     "eslint-plugin-ui5depchk": "file:../plugin"
-  },
-  "dependencies": {
-    "request": "^2.88.2",
-    "sync-request": "^6.1.0"
   }
 }
