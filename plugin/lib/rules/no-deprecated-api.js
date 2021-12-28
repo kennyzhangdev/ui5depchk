@@ -12,24 +12,14 @@
 var mDeprecated = {};
 var mModule = {};
 var mVariableModule = {};
-var DEPRECATED_API;
+var DEPRECATED_API = {};
 var aApis = [];
 
 //Init
 var ui5version;
+const storage = require("node-persist");
+storage.initSync();
 
-const apiUrl =
-  "https://sapui5.hana.ondemand.com/docs/api/api-index-deprecated.json";
-
-//Collect UI5 deprecation info
-var request = require("sync-request");
-try {
-  let res = request("GET", apiUrl);
-  var body = res.getBody("utf8");
-  DEPRECATED_API = JSON.parse(body);
-} catch (e) {
-  console.log(e);
-}
 /** @type {import('eslint').Rule.RuleModule} */
 module.exports = {
   meta: {
@@ -52,6 +42,13 @@ module.exports = {
   create: function (context) {
     //Assemble deprecated API only once
     if (aApis.length === 0) {
+      DEPRECATED_API = storage.getItemSync("API");
+      if (!DEPRECATED_API) {
+        console.log(
+          "uidepchk plugin is loading initial data, please retry later."
+        );
+        return {};
+      }
       var options = context.options;
       if (options.length > 0 && options[0].ui5version) {
         ui5version = options[0].ui5version;
@@ -105,7 +102,11 @@ module.exports = {
         context.report({
           node: oArrayExpressionNode,
           message:
-            "AMD Defined modules do not match in function param, if not fixed, the report may be incorrect"
+            "AMD Defined modules do not match objects in function param with position [line: " +
+            oFunctionExpressionNode.loc.start.line +
+            ", column" +
+            oFunctionExpressionNode.loc.start.column +
+            "], if not fixed, the report may be incorrect"
         });
         return;
       }
@@ -168,7 +169,7 @@ module.exports = {
       }
 
       if (!sStdModule) {
-        // console.log(sClassName + " is not a SAPUI5 module");
+        // console.debug(sClassName + " is not a SAPUI5 module");
         return;
       }
       checkDeprecation(node, sStdModule, "");

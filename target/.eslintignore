@@ -1,5 +1,3 @@
-webapp/thirdPartyLib/*
-webapp/service/typescript-fetch-client/*
 dist
 webapp/dist
 webapp/resources

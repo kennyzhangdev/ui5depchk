@@ -13,6 +13,7 @@ sap.ui.define(
     "sap/suite/ui/commons/ChartContainerContent",
     "sap/ui/app",
     "sap/ui/model/odata/ODataModel",
+    "sap/ui/table/Table",
     "sap/ui/table/Table"
   ],
   function (
@@ -38,6 +39,7 @@ sap.ui.define(
       _rootPath: jQuery.sap.getModulePath("sd.ModelMonthSales"),
 
       onInit: function () {
+        console.log();
         var oDateFormat = DateFormat.getDateTimeInstance({
           pattern: "yyyyMMdd"
         });

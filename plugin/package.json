@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-ui5depchk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Check deprecated API usage for a specific SAPUI5 version",
   "homepage": "https://github.com/kennyzhangdev/ui5depchk",
   "repository": {
@@ -19,9 +19,9 @@
     "test": "mocha tests --recursive"
   },
   "dependencies": {
-    "request": "^2.88.2",
-    "requireindex": "^1.2.0",
-    "sync-request": "^6.1.0"
+    "axios": "^0.24.0",
+    "node-persist": "^2.1.0",
+    "requireindex": "^1.2.0"
   },
   "devDependencies": {
     "eslint": "^8.0.1",
