@@ -22,25 +22,32 @@ Add `ui5depchk` to the plugins section of your `.eslintrc` configuration file. Y
 
 ```json
 {
-    "plugins": [
-        "ui5depchk"
-    ]
+  "plugins": ["ui5depchk"]
 }
 ```
-
 
 Then configure the rules you want to use under the rules section.
 
 ```json
 {
-    "rules": {
-        "ui5depchk/rule-name": 2
-    }
+  "rules": {
+    "ui5depchk/no-deprecated-api": "warn"
+  }
 }
 ```
 
+Add parameter ui5version if you want to check against a specific SAPUI5 version. Or you can set it as "latest".
+
+```json
+{
+  "rules": {
+    "ui5depchk/no-deprecated-api": ["warn", { "ui5version": "1.84" }]
+  }
+}
+```
+
+Use .eslintignore to ignore non-SAPUI5 code to avoid unexpected error.
+
 ## Supported Rules
 
-* Fill in provided rules here
-
-
+- no-deprecated-api

@@ -174,7 +174,7 @@ module.exports = {
       checkDeprecation(node, sStdModule, "");
     }
 
-    function processVariable(node) {
+    function processDeclareVariable(node) {
       var oVariableDeclarator = node.declarations[0];
 
       //Ignore for(var i in array)
@@ -297,20 +297,40 @@ module.exports = {
     return {
       //UI5 AMD control validate
       Program(node) {
-        validateModule(node);
+        try {
+          validateModule(node);
+        } catch (error) {
+          console.debug(error);
+        }
       },
       VariableDeclaration(node) {
-        processVariable(node);
+        try {
+          processDeclareVariable(node);
+        } catch (error) {
+          console.debug(error);
+        }
       },
 
       AssignmentExpression(node) {
-        processAssignedVariable(node);
+        try {
+          processAssignedVariable(node);
+        } catch (error) {
+          console.debug(error);
+        }
       },
       NewExpression(node) {
-        validateNew(node);
+        try {
+          validateNew(node);
+        } catch (error) {
+          console.debug(error);
+        }
       },
       CallExpression(node) {
-        validateMethod(node);
+        try {
+          validateMethod(node);
+        } catch (error) {
+          console.debug(error);
+        }
       }
     };
   }

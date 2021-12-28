@@ -1,13 +1,18 @@
 {
   "name": "eslint-plugin-ui5depchk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Check deprecated API usage for a specific SAPUI5 version",
+  "homepage": "https://github.com/kennyzhangdev/ui5depchk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kennyzhangdev/ui5depchk.git"
+  },
   "keywords": [
     "eslint",
     "eslintplugin",
     "eslint-plugin"
   ],
-  "author": "eslint-plugin-ui5depchk",
+  "author": "Kenny Zhang <kennyzhangdev@163.com>",
   "main": "lib/index.js",
   "scripts": {
     "lint": "eslint .",
@@ -30,5 +35,5 @@
   "peerDependencies": {
     "eslint": ">=6"
   },
-  "license": "ISC"
+  "license": "MIT"
 }
