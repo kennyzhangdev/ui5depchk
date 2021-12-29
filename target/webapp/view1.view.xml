@@ -1,0 +1,420 @@
+<mvc:View controllerName="view1"
+  xmlns="sap.m"
+  xmlns:l="sap.ui.layout"
+  xmlns:f="sap.f"
+  xmlns:cus="my.customControl"
+  xmlns:table="sap.ui.table"
+  xmlns:form="sap.ui.layout.form"
+  xmlns:vm="sap.ui.comp.variants"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns:uxap="sap.uxap"
+  xmlns:commons = "sap.ui.commons"
+  xmlns:tnt="sap.tnt">
+
+  <Page showHeader="false">
+    <f:DynamicPageTitle>
+      <f:heading>
+        <HBox class="custom-entity-name-style">
+          <core:Icon src="sap-icon://chevron-phase-2" color="{path:'entity>/modelType', formatter:'.formatter.getBPIconColorByType'}" class="sapUiTinyMarginEnd">
+          </core:Icon>
+          <Title text="{entity>/name}" tooltip="{entity>/name}" class="sapUiTinyMarginEnd"/>
+          <!-- <Link id="gotoReferenceId" text="{i18n>gotoReference}" visible="{=${entity>/baType} === 'duplicate'}" press="onGoToReferencePressed" /> -->
+        </HBox>
+      </f:heading>
+      <f:expandedContent>
+        <Label text="{entity>/code}" tooltip="{entity>/code}" />
+      </f:expandedContent>
+      <f:snappedContent>
+        <Label text="{entity>/code}" tooltip="{entity>/code}"/>
+      </f:snappedContent>
+      <f:breadcrumbs>
+        <Breadcrumbs >
+          <Link id="BADomainId" text="{i18n>businessArchitectureDomain}" press="onHomeLinkPressed" />
+          <Link id="BABtnId" text="{i18n>businessActivity}" press="onBusinessActivitiesLinkPressed" />
+        </Breadcrumbs>
+      </f:breadcrumbs>
+      <f:actions>
+        <!-- <Button id="upgradeBtnId" text="{i18n>upgrade}" tooltip="{i18n>upgrade}" type="Emphasized" visible="{= ${entity>/releaseVersion} !== ${entity>/architectureVersion}}" press="upgradeVersionButtonPress"/> -->
+        <Button text="{i18n>createRevision}" press="onCreateBaRevisionBtn" tooltip="{i18n>createRevision}" id="baCreateRevision" type="Transparent" class="sapUiTinyMarginEnd" visible="{= ${
+                         parts: [
+                            'entity>/status',
+                            'entity>/entityClass',
+                            'actionFunctionPointMapping>/onCreateBaRevisionBtn'
+                        ],
+                        formatter: '.formatter.getButtonPermissionByFunctionPoint'
+                      }
+                   }"/>
+        <Button text="{i18n>createNewVersion}" visible="{= ${newCreateModel>/canCreateNew} &amp;&amp; ${
+                         parts: [
+                            'entity>/status',
+                            'entity>/entityClass',
+                            'actionFunctionPointMapping>/createNewVersionBtn'
+                        ],
+                        formatter: '.formatter.getButtonPermissionByFunctionPoint'
+                      }}" tooltip="{i18n>createNewVersion}" class="sapUiTinyMarginEnd" type="Transparent" />
+        <Button id="deleteBtnId" type="Transparent" text="{i18n>delete}" tooltip="{i18n>delete}" enabled="{parts: [
+                      'entity>/status',
+                      'entity>/entityClass',
+                      'actionFunctionPointMapping>/deleteEntity'
+                      ],
+                  formatter: '.formatter.getActionPermissionByStatusFunctionPoint'}" press="onDeleteButtonPress"/>
+      </f:actions>
+    </f:DynamicPageTitle>
+    <commons:Toolbar standalone="true">
+      <commons:ToggleButton pressed="true">
+      </commons:ToggleButton>
+    </commons:Toolbar>
+    <IconTabBar select="onTabSelect" expandable="false" selectedKey="{viewModel>/selectedTabKey}">
+      <items>
+        <IconTabFilter text="{i18n>generalInformation}" tooltip="{i18n>generalInformation}" id="baGeneralInfoTabFilter" key="GeneralInfo">
+          <form:Form id="detail" editable="true" visible="{= !${viewModel>/isEdit}}">
+            <form:toolbar>
+              <Toolbar style="Clear" height="2rem">
+                <Title text="{i18n>details}"/>
+                <ToolbarSpacer />
+
+                <Button id="editBtnId" text="{i18n>edit}" tooltip="{i18n>edit}" type="Transparent" press="onEditPress" enabled="{  parts: [
+                                'entity>/status',
+                                'entity>/entityClass',
+                                'actionFunctionPointMapping>/updateGeneralInfo'
+                              ],
+                              formatter: '.formatter.getActionPermissionByStatusFunctionPoint' }" visible="{= !${viewModel>/isEdit}}" />
+              </Toolbar>
+            </form:toolbar>
+
+            <form:layout>
+              <form:ResponsiveGridLayout labelSpanXL="4" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="4" columnsL="3" columnsM="3" singleContainerFullSize="false" />
+            </form:layout>
+            <form:formContainers>
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>businessId}:" tooltip="{i18n>businessId}:" />
+                        <Text text="{entity>/code}" tooltip="{entity>/code}" width="80%" wrapping="false"/>
+                      </FlexBox>
+                    </form:fields>
+
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>globalId}:" tooltip="{i18n>globalId}:" />
+                        <Text text="{entity>/stableId}" tooltip="{entity>/stableId}" width="80%"/>
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>apqc}:" tooltip="{i18n>apqc}:"/>
+                        <Text text="{entity>/apqc}" tooltip="{entity>/apqc}" width="80%" wrapping="false" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                </form:formElements>
+              </form:FormContainer>
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+
+                        <Label text="{i18n>name}:" tooltip="{i18n>name}:"/>
+
+                        <Text text="{entity>/name}" tooltip="{entity>/name}" width="80%" wrapping="false" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <!-- <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>status}:" tooltip="{i18n>status}:"/>
+                        <Text text="{parts: ['entity>/status'],formatter: '.formatter.getStatusTextByKey'}" tooltip="{parts: ['entity>/status'],formatter: '.formatter.getStatusTextByKey'}" width="80%" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement> -->
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>contentGroup}:" tooltip="{i18n>contentGroup}:"/>
+                        <Text text="{entity>/contentGroup}" tooltip="{entity>/contentGroup}" width="80%" wrapping="false" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                </form:formElements>
+              </form:FormContainer>
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement visible="{=${entity>/modelType}==='VARIANT'}">
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>reasonForVariant}:" tooltip="{i18n>reasonForVariant}" />
+
+                        <Text maxLines="5" text="{entity>/reason}" tooltip="{entity>/reason}" width="80%" id="reasonText" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>E2EReferenceNew}:" visible="{=${entity>/modelType} === 'VARIANT'}" tooltip="{i18n>E2EReferenceNew}"/>
+                        <Link text="{entity>/source/name}" id="referenceLink" visible="{=${entity>/modelType} === 'VARIANT'}" href="{
+                                  path: 'entity>/source/id',
+                                  formatter: '.formatter.goToBADetailPage'
+                                }"/>
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                </form:formElements>
+              </form:FormContainer>
+            </form:formContainers>
+          </form:Form>
+          <form:Form id="edit_detail" editable="true" visible="{= ${viewModel>/isEdit}}">
+            <form:toolbar>
+              <Toolbar style="Clear" height="2rem">
+                <Title text="{i18n>details}"/>
+                <ToolbarSpacer />
+                <Button id="saveBtnId" text="{i18n>save}" tooltip="{i18n>save}" type="Transparent" press="onSavePress" visible="{=${bpViewModel>/isInformationEditMode}}" />
+                <Button id="cancelBtnId" text="{i18n>cancel}" tooltip="{i18n>cancel}" type="Transparent" press="onCancelPress" visible="{=${bpViewModel>/isInformationEditMode}}" />
+              </Toolbar>
+            </form:toolbar>
+
+            <form:layout>
+              <form:ResponsiveGridLayout labelSpanXL="4" labelSpanL="4" labelSpanM="12" labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="4" columnsL="3" columnsM="3" singleContainerFullSize="false" />
+            </form:layout>
+            <form:formContainers>
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>businessId}:" tooltip="{i18n>businessId}:"/>
+                        <Input editable="false" id="code" width="80%" liveChange="onInputChange" value="{entity>/code}" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>globalId}:" tooltip="{i18n>globalId}:" />
+                        <Input editable="false" id="stableId" width="80%" liveChange="onInputChange" value="{entity>/stableId}" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>apqc}:" tooltip="{i18n>apqc}:"/>
+                        <Input liveChange="onInputChange" id="apqc" editable="true" width="80%" value="{entity>/apqc}" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                </form:formElements>
+              </form:FormContainer>
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+
+                        <Label text="{i18n>name}:" tooltip="{i18n>name}:"/>
+
+                        <Input id="name" liveChange="onInputChange" editable="{= !${entity>/isDocumentCreated}}" value="{entity>/name}" width="80%" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>contentGroup}:" tooltip="{i18n>contentGroup}:"/>
+                        <Text id="type" text="{entity>/contentGroup}"/>
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                </form:formElements>
+              </form:FormContainer >
+              <form:FormContainer >
+                <form:formElements>
+                  <form:FormElement visible="{=${entity>/modelType}==='VARIANT'}">
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>reasonForVariant}:" tooltip="{i18n>reasonForVariant}" required="true"/>
+                        <TextArea id="reason" value="{
+                          path: 'entity>/reason'}" rows='5' maxLength="140" liveChange="onInputChange" editable="true" width="80%" />
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+                  <form:FormElement>
+                    <form:fields>
+                      <FlexBox direction="Column" class="sapUiMediumMarginBottom">
+                        <Label text="{i18n>E2EReferenceNew}:" visible="{=${entity>/modelType} === 'VARIANT'}" tooltip="{i18n>E2EReferenceNew}"/>
+                        <Link text="{entity>/source/name}" id="referenceLinkEdit" visible="{=${entity>/modelType} === 'VARIANT'}" href="{
+                                  path: 'entity>/source/id',
+                                  formatter: '.formatter.goToBADetailPage'
+                                }"/>
+                      </FlexBox>
+                    </form:fields>
+                  </form:FormElement>
+
+                </form:formElements>
+              </form:FormContainer >
+            </form:formContainers>
+          </form:Form>
+
+        </IconTabFilter>
+
+        <IconTabFilter text="{i18n>solutionActivities}" tooltip="{i18n>solutionActivities}" id="baSolutionActivityTabFilter" key="SolutionActivity">
+
+          <table:Table selectionMode="Single" busyIndicatorDelay="0" selectionBehavior="Row" rowSelectionChange="onSolutionActivityTableSelectionChange" enableSelectAll="false" id="SolutionActivitiesTable" rows="{path:'solutionActivities>/'}" visibleRowCount="20">
+
+            <table:extension>
+              <OverflowToolbar>
+                <Title id="BATitle" tooltip="{i18n>solutionActivities}" text="{i18n>solutionActivities}">
+                </Title>
+              </OverflowToolbar>
+            </table:extension>
+            <table:columns>
+              <table:Column width="50%">
+                <Label text="{i18n>name}" tooltip="{i18n>name}"/>
+                <table:template>
+                  <HBox>
+                    <core:Icon src="sap-icon://activity-2" tooltip="{solutionActivities>name}" color="Neutral" class="sapUiTinyMarginEnd"/>
+                    <Link id="SANameId" text="{solutionActivities>name}" href="{
+                          parts:['solutionActivities>id'],
+                          formatter:'.formatter.goToSADetailPage'
+                        }" wrapping="false" press="onSANamePressed(${solutionActivities>id})" tooltip="{solutionActivities>name}" class="sapUiTinyMarginEnd"/>
+
+                  </HBox>
+                </table:template>
+              </table:Column>
+              <table:Column width="20%">
+                <Label text="{i18n>id}"/>
+                <table:template>
+                  <Text text="{solutionActivities>code}" wrapping="false"/>
+                </table:template>
+              </table:Column>
+              <table:Column>
+                <Label text="{i18n>type}"/>
+                <table:template>
+                  <ObjectStatus text="{path:'solutionActivities>type',formatter:'.formatter.getTypeTextByKey'}" tooltip="{path:'solutionActivities>type',formatter:'.formatter.getTypeTextByKey'}" icon="{path:'solutionActivities>type',formatter:'.formatter.getTypeIconByKey'}" />
+                </table:template>
+              </table:Column>
+            </table:columns>
+          </table:Table>
+        </IconTabFilter>
+        <IconTabFilter text="{i18n>variants}" key="Variants" id="baVariantsTabFilter" visible="{=${entity>/modelType}!=='VARIANT'}">
+          <table:Table selectionMode="Single" busyIndicatorDelay="0" selectionBehavior="Row" rowSelectionChange="onBAVTableSelectionChange" enableSelectAll="false" id="BAVTable" rows="{path:'BAVModel>/variants/'}" visibleRowCount="20">
+
+            <table:extension>
+              <OverflowToolbar>
+                <Title id="BAVTitle" tooltip="{i18n>variants}" text="{i18n>variants}">
+                </Title>
+              </OverflowToolbar>
+            </table:extension>
+            <table:columns>
+              <table:Column width="50%">
+                <Label text="{i18n>name}" tooltip="{i18n>name}"/>
+                <table:template>
+                  <HBox>
+                    <core:Icon src="sap-icon://chevron-phase-2" color="#0f828f" class="sapUiTinyMarginEnd">
+                    </core:Icon>
+                    <Link id="BAVNameId" text="{BAVModel>name}" href="{
+                          parts:['BAVModel>id'],
+                          formatter:'.formatter.goToBADetailPage'
+                        }" wrapping="false" tooltip="{BAVModel>name}" class="sapUiTinyMarginEnd"/>
+
+                  </HBox>
+                </table:template>
+              </table:Column>
+              <table:Column width="20%">
+                <Label text="{i18n>id}"/>
+                <table:template>
+                  <Text text="{BAVModel>code}" wrapping="false"/>
+                </table:template>
+              </table:Column>
+              <table:Column>
+                <Label text="{i18n>version}"/>
+                <table:template>
+                  <Text text="{BAVModel>releaseVersion}" wrapping="false"/>
+                </table:template>
+              </table:Column>
+              <table:Column>
+                <Label text="{i18n>reasonForVariant}"/>
+                <table:template>
+                  <Text text="{BAVModel>reason}" tooltip="{BAVModel>reason}" wrapping="false" />
+                </table:template>
+              </table:Column>
+            </table:columns>
+          </table:Table>
+
+        </IconTabFilter>
+
+        <IconTabFilter text="{i18n>businessCapability}" key="BusinessCapability" id="babusinessCapabilityTabFilter">
+          <OverflowToolbar>
+            <Title text="{i18n>businessCapability}" tooltip="{i18n>businessCapability}"/>
+            <ToolbarSpacer/>
+
+            <Button type="Transparent" text="{i18n>assign}" press="onBcAssignBtnPressed" tooltip="{i18n>assign}" enabled="{ parts: [
+                              'entity>/status',
+                              'entity>/entityClass',
+                              'actionFunctionPointMapping>/assignUnassignBusinessCapability'
+                            ],
+                    formatter: '.formatter.getActionPermissionByStatusFunctionPoint' }" id="baAsignBCBtn">
+              <layoutData>
+                <OverflowToolbarLayoutData group="1"/>
+              </layoutData>
+            </Button>
+            <Button type="Transparent" enabled="{= ${viewModel>/canPressBcUnassignButton} &amp;&amp; ${
+                     parts: [
+                              'entity>/status',
+                              'entity>/entityClass',
+                              'actionFunctionPointMapping>/assignUnassignBusinessCapability'
+                            ],
+                    formatter: '.formatter.getActionPermissionByStatusFunctionPoint' 
+                  }}" text="{i18n>unassign}" press="onBcUnassignBtnPressed" tooltip="{i18n>unassign}" id="baUnasignBCBtn">
+              <layoutData>
+                <OverflowToolbarLayoutData group="1"/>
+              </layoutData>
+            </Button>
+            <ToolbarSeparator/>
+            <Label text="Expand to" labelFor="expandControl">
+              <layoutData>
+                <OverflowToolbarLayoutData group="2"/>
+              </layoutData>
+            </Label>
+            <Select items="{expandModel>/}" enabled= "true" id="expandSelect" change="onBcExpandSelect">
+              <core:Item text="{expandModel>text}" key="{expandModel>text}"/>
+              <layoutData>
+                <OverflowToolbarLayoutData group="2"/>
+              </layoutData>
+            </Select>
+            <Button id="collapseAllId" type="Transparent" text="{i18n>collapseAll}" enabled="{=(${viewModel>/bCanPressBcCollapseAllButton})}" tooltip="{i18n>collapseAll}" press="onBcCollapseAllBtnPressed">
+              <layoutData>
+                <OverflowToolbarLayoutData group="2"/>
+              </layoutData>
+            </Button>
+          </OverflowToolbar>
+
+          <cus:CustomTreeTable selectionMode="Single" selectionBehavior="Row" rowSelectionChange="onBcTableSelectionChange" enableSelectAll="false" id="assignedBcTable" visible="true" rows="{path: 'baBcTableModel>/', parameters: {arrayNames:['list']}}" visibleRowCountMode="Auto" minAutoRowCount="10" toggleOpenState="onBcTreeTableToggle()">
+            <cus:columns>
+              <table:Column>
+                <Label text="{i18n>name}" tooltip="{i18n>name}"/>
+                <table:template>
+                  <HBox>
+                    <tnt:InfoLabel text="{path: 'baBcTableModel>bcmType', formatter: '.getBusinessCapabilityInfoLabelText'}" displayOnly="false" colorScheme="8" class="sapUiTinyMarginEnd"/>
+                    <Link id="baTableTreeLink" text="{path: 'baBcTableModel>bcmName', formatter: '.formatter.removeExtendedAsciiCodes'}" tooltip="{path: 'baBcTableModel>bcmName', formatter: '.formatter.removeExtendedAsciiCodes'}" press="onTableLinkPressed(${baBcTableModel>bcmId})" wrapping="false" class="sapUiTinyMarginEnd"/>
+                    <!-- <Text text="{baBcTableModel>bcmName}" /> -->
+                  </HBox>
+                </table:template>
+              </table:Column>
+            </cus:columns>
+          </cus:CustomTreeTable>
+        </IconTabFilter>
+      </items>
+    </IconTabBar>
+  </Page>
+</mvc:View>

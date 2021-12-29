@@ -14,6 +14,7 @@ var mModule = {};
 var mVariableModule = {};
 var DEPRECATED_API = {};
 var aApis = [];
+var mViewNS = {};
 
 //Init
 var ui5version;
@@ -104,7 +105,7 @@ module.exports = {
           message:
             "AMD Defined modules do not match objects in function param with position [line: " +
             oFunctionExpressionNode.loc.start.line +
-            ", column" +
+            ", column: " +
             oFunctionExpressionNode.loc.start.column +
             "], if not fixed, the report may be incorrect"
         });
@@ -268,6 +269,62 @@ module.exports = {
       checkDeprecation(node, sStdModule, sMethodName);
     }
 
+    function validateXMLView(node) {
+      var oRootNode = node.root;
+      // var sXML = node.root.value;
+      var aRootAttribute = oRootNode.attributes;
+      mViewNS = {}; //Reset mViewNS. Different XML view may have different NS definition
+      aRootAttribute.forEach((element) => {
+        if (element.attributeName.value.indexOf("xmlns") > -1) {
+          //Exclude view parameter like controllerName
+          mViewNS[element.attributeName.value] = element.attributeValue.value;
+        }
+      });
+      _validateViewControl(node.root);
+
+      // xml2js.parseString(sXML, function (err, result) {
+      //   var sRootKey = Object.keys(result)[0]; //There is only one root tag in XML view, usually mvc:View
+
+      //   var oNameSpace = result[sRootKey].$;
+
+      //   //Assemble XML namespace mapping
+      //   Object.entries(oNameSpace).forEach(([key, value]) => {
+      //     if (key.indexOf("xmlns") > -1) {
+      //       //Exclude view parameter like controllerName
+      //       mViewNS[key] = value;
+      //     }
+      //   });
+      //   _validateViewControl(node.root);
+      // });
+    }
+
+    function _validateViewControl(node) {
+      if (node.type === "HTMLElement") {
+        var sTagName = node.tagName;
+        var aTagName = sTagName.split(":"); //key is XML control name,like: "mvc:View", or just "View"
+        var sNameSpace = "";
+        var sControl = "";
+        if (aTagName.length === 1) {
+          sControl = aTagName[0];
+        } else {
+          sNameSpace = ":" + aTagName[0];
+          sControl = aTagName[1];
+        }
+        var xmlns = mViewNS["xmlns" + sNameSpace];
+        if (xmlns && sControl) {
+          var sStdModule = xmlns + "." + sControl;
+          checkDeprecation(node, sStdModule, "");
+        }
+        if (node.children) {
+          node.children.forEach((element) => {
+            if (element.type === "HTMLElement") {
+              _validateViewControl(element);
+            }
+          });
+        }
+      }
+    }
+
     function _staticModuleMethod(sModuleMethod) {
       let lastIndex = sModuleMethod.lastIndexOf(".");
       if (lastIndex === -1) {
@@ -299,7 +356,11 @@ module.exports = {
       //UI5 AMD control validate
       Program(node) {
         try {
-          validateModule(node);
+          if (node.root && node.root.type === "HTMLElement") {
+            validateXMLView(node); //Vallidate XML view
+          } else {
+            validateModule(node); //Validate JavaScript
+          }
         } catch (error) {
           console.debug(error);
         }

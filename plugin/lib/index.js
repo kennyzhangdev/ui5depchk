@@ -34,6 +34,7 @@ if (!storage.getItemSync("API")) {
 
 module.exports = {
   rules: requireIndex(__dirname + "/rules"),
+  parser: "eslint-xml-parser",
   environments: {
     jquery: {
       globals: {
