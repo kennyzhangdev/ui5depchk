@@ -6,6 +6,11 @@
 "use strict";
 
 //------------------------------------------------------------------------------
+// Requirements
+//------------------------------------------------------------------------------
+const storage = require("node-persist");
+
+//------------------------------------------------------------------------------
 // Rule Definition
 //------------------------------------------------------------------------------
 
@@ -15,10 +20,8 @@ var mVariableModule = {};
 var DEPRECATED_API = {};
 var aApis = [];
 var mViewNS = {};
+var ui5version = "latest";
 
-//Init
-var ui5version;
-const storage = require("node-persist");
 storage.initSync();
 
 /** @type {import('eslint').Rule.RuleModule} */
@@ -55,7 +58,6 @@ module.exports = {
         ui5version = options[0].ui5version;
       }
 
-      ui5version = ui5version ? ui5version : "latest";
       console.log("Target UI5 version is: " + ui5version);
 
       Object.entries(DEPRECATED_API).forEach(([key, value]) => {
@@ -83,6 +85,12 @@ module.exports = {
       }
     }
 
+    /**
+     * Check whether SAPUI5 module is deprecated.
+     * In SAPUI5 controller.js it is usually parameter of "sap.ui.define" as AMD.
+     * @param {ASTNode} node The node we are checking for SAPUI5 module usage.
+     * @returns {void}
+     */
     function validateModule(node) {
       var oArrayExpressionNode, oFunctionExpressionNode;
       if (!node.body[0].expression.arguments) {
@@ -131,9 +139,17 @@ module.exports = {
         }
       }
     }
+    /**
+     * Check whether a SAPUI5 control or method is deprecated.
+     * General reports whenever deprecated usage is found.
+     * @param {ASTNode} node The node we are checking for SAPUI5 control and method usage.
+     * @param {String} module The standard module name, like: sap.ui.app
+     * @param {Method} method The method name, like: getNavigationMode (from sap.ui.table.Table). It should be an empty string '' if only check the module.
+     * @returns {void}
+     */
     function checkDeprecation(node, module, method) {
-      // console.log("-------------------------------------------");
-      // console.log(node.loc.start.line + "|" + module + "|" + method);
+      // console.debug("-------------------------------------------");
+      // console.debug(node.loc.start.line + "|" + module + "|" + method);
 
       if (!module) {
         return;
@@ -160,15 +176,21 @@ module.exports = {
       }
     }
 
+    /**
+     * Check whether a deprecated SAPUI5 control is used in a NEW statement like: new sap.ui.app();
+     * General reports whenever deprecated usage is found.
+     * @param {ASTNode} node The node contains a new statement.
+     * @returns {void}
+     */
     function validateNew(node) {
       var sStdModule;
       var sClassName = node.callee.name;
       if (sClassName) {
         sStdModule = mModule[sClassName];
       } else {
-        sStdModule = _ModuleFromMemberExpression(node.callee, "");
+        sStdModule = _moduleFromMemberExpression(node.callee, "");
       }
-
+      //Ignore non-SAPUI5 control
       if (!sStdModule) {
         // console.debug(sClassName + " is not a SAPUI5 module");
         return;
@@ -176,6 +198,12 @@ module.exports = {
       checkDeprecation(node, sStdModule, "");
     }
 
+    /**
+     * Analyze declared varaible and store it is Class name into mapping object mVariableModule.
+     * No reports are generated in this function.
+     * @param {ASTNode} node The node contains a varable declaration statement like: var oTable = new sap.ui.table.Table. Or, var oTable = new Table();
+     * @returns {void}
+     */
     function processDeclareVariable(node) {
       var oVariableDeclarator = node.declarations[0];
 
@@ -201,7 +229,7 @@ module.exports = {
         if (sClassName) {
           sStdModule = mModule[sClassName];
         } else {
-          sStdModule = _ModuleFromMemberExpression(
+          sStdModule = _moduleFromMemberExpression(
             oVariableDeclarator.init.callee,
             ""
           );
@@ -215,6 +243,12 @@ module.exports = {
       }
     }
 
+    /**
+     * Analyze assigned varaible and store it is Class name into mapping object mVariableModule.
+     * No reports are generated in this function.
+     * @param {ASTNode} node The node contains a varable assignment statement like: this.oTable = new sap.ui.table.Table. Or, this.oTable = new Table();
+     * @returns {void}
+     */
     function processAssignedVariable(node) {
       //node.left.type === "Identifier"
 
@@ -235,15 +269,21 @@ module.exports = {
         sStdModule = mModule[sClassName];
       } else {
         if (node.right.type === "NewExpression") {
-          sStdModule = _ModuleFromMemberExpression(node.right.callee, "");
+          sStdModule = _moduleFromMemberExpression(node.right.callee, "");
         } else {
-          sStdModule = _ModuleFromMemberExpression(node.right.init.callee, "");
+          sStdModule = _moduleFromMemberExpression(node.right.init.callee, "");
         }
       }
 
       mVariableModule[sVariableName] = sStdModule;
     }
 
+    /**
+     * Validate if control.method usage is deprecated like: oTable.getNavigationMode();
+     * Reports are generated if control/method is deprecated.
+     * @param {ASTNode} node The node contains a call statement like: oTable.getNavigationMode(). Or, this.oTable.getNavigationMode();
+     * @returns {void}
+     */
     function validateMethod(node) {
       if (!node.callee || !node.callee.object) {
         return;
@@ -253,7 +293,7 @@ module.exports = {
       //Check static method jQuery.sap.log.debug("123");
       if (node.callee.object.type === "MemberExpression") {
         //Variable method like this.oTable.getSelectedIndex() should also process
-        let sModuleMethod = _ModuleFromMemberExpression(node.callee, "");
+        let sModuleMethod = _moduleFromMemberExpression(node.callee, "");
         [sStdModule, sMethodName] = _staticModuleMethod(sModuleMethod); //sStdModule may also be variable name
         if (mVariableModule[sStdModule]) {
           sStdModule = mVariableModule[sStdModule];
@@ -269,6 +309,11 @@ module.exports = {
       checkDeprecation(node, sStdModule, sMethodName);
     }
 
+    /**
+     * Process XML view root node to store xmlns mapping into mViewNS.
+     * @param {ASTNode} node The XML view node.
+     * @returns {void}
+     */
     function validateXMLView(node) {
       var oRootNode = node.root;
       // var sXML = node.root.value;
@@ -281,23 +326,14 @@ module.exports = {
         }
       });
       _validateViewControl(node.root);
-
-      // xml2js.parseString(sXML, function (err, result) {
-      //   var sRootKey = Object.keys(result)[0]; //There is only one root tag in XML view, usually mvc:View
-
-      //   var oNameSpace = result[sRootKey].$;
-
-      //   //Assemble XML namespace mapping
-      //   Object.entries(oNameSpace).forEach(([key, value]) => {
-      //     if (key.indexOf("xmlns") > -1) {
-      //       //Exclude view parameter like controllerName
-      //       mViewNS[key] = value;
-      //     }
-      //   });
-      //   _validateViewControl(node.root);
-      // });
     }
 
+    /**
+     * Validate if XML view contains deprecated SAPUI5 control. It continue to validate its child nodes.
+     * Reports are generated if control is deprecated.
+     * @param {ASTNode} node The XML node(actually HTML node converted by eslint-xml-parser).
+     * @returns {void}
+     */
     function _validateViewControl(node) {
       if (node.type === "HTMLElement") {
         var sTagName = node.tagName;
@@ -325,22 +361,34 @@ module.exports = {
       }
     }
 
+    /**
+     * Extract module and method name from statement like jQuery.sap.log.debug
+     * Reports are generated if control is deprecated.
+     * @param {String} sModuleMethod The string in format module.method
+     * @returns {Array} array in format [module, method], like: ['jQuery.sap.log','debug']
+     */
     function _staticModuleMethod(sModuleMethod) {
       let lastIndex = sModuleMethod.lastIndexOf(".");
       if (lastIndex === -1) {
         return [null, null];
       } else {
         return [
-          sModuleMethod.substr(0, lastIndex),
-          sModuleMethod.substr(lastIndex + 1)
+          sModuleMethod.substring(0, lastIndex),
+          sModuleMethod.substring(lastIndex + 1)
         ];
       }
     }
 
-    //extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
-    function _ModuleFromMemberExpression(node, sChildName) {
+    /**
+     * Extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
+     * This is done in traverse approach.
+     * @param {ASTNode} node The node like 'sap'. Its child will be 'ui'
+     * @param {String} sChildName The child name. 'ODataModel' -> 'odata.ODataModel' -> 'model.odata.ODataModel' etc.
+     * @returns {String} Extracted module name like: 'sap.ui.model.odata.ODataModel'
+     */
+    function _moduleFromMemberExpression(node, sChildName) {
       if (node.object) {
-        return _ModuleFromMemberExpression(
+        return _moduleFromMemberExpression(
           node.object,
           sChildName === ""
             ? node.property.name

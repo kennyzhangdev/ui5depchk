@@ -16,13 +16,27 @@ Next, install `eslint-plugin-ui5depchk`:
 npm install eslint-plugin-ui5depchk --save-dev
 ```
 
+To validate XML view file, it depends on `eslint-xml-parser`. Install it as well:
+
+```sh
+npm install eslint-xml-parser --save-dev
+```
+
 ## Usage
 
-Add `ui5depchk` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix:
+Add `ui5depchk` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix.
+
+Use `overrides` to configure xml parser on view.xml files.
 
 ```json
 {
-  "plugins": ["ui5depchk"]
+  "plugins": ["ui5depchk"],
+  "overrides": [
+    {
+      "files": "*.view.xml",
+      "parser": "eslint-xml-parser"
+    }
+  ]
 }
 ```
 
@@ -36,7 +50,7 @@ Then configure the rules you want to use under the rules section.
 }
 ```
 
-Add parameter ui5version if you want to check against a specific SAPUI5 version. Or you can set it as "latest".
+Add parameter `ui5version` if you want to validate against a specific SAPUI5 version. Or you can set it as `latest`.
 
 ```json
 {
@@ -46,7 +60,7 @@ Add parameter ui5version if you want to check against a specific SAPUI5 version.
 }
 ```
 
-Use .eslintignore to ignore non-SAPUI5 code to avoid unexpected error.
+Use `.eslintignore` to ignore non-SAPUI5 code to avoid unexpected error.
 
 If you see "plugin is loading initial data", just retry. This only happens for the first time plugin loaded.
 

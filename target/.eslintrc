@@ -5,5 +5,10 @@
   "rules": {
     "ui5depchk/no-deprecated-api": ["warn",{"ui5version":"1.84"}]
   },
-  "plugins": ["ui5depchk"]
+  "plugins": ["ui5depchk"],
+  "overrides": [{
+    "files": "*.view.xml",
+    "parser": "eslint-xml-parser"
+  }]
+  
 }
