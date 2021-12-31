@@ -64,6 +64,8 @@ Use `.eslintignore` to ignore non-SAPUI5 code to avoid unexpected error.
 
 If you see "plugin is loading initial data", just retry. This only happens for the first time plugin loaded.
 
+Due to the dependency on module `node-persist`, a `.node-persist` folder will be created. Ignore this path in your `.gitignore`
+
 ## Supported Rules
 
 - no-deprecated-api
