@@ -41,8 +41,9 @@ sap.ui.define(
         var oDateFormat = DateFormat.getDateTimeInstance({
           pattern: "yyyyMMdd"
         });
-
-        var oTestTable = new Table();
+        this.oTestTable5 = this._oTestTable6 = new Table();
+        var oTestTable = (this._oTestTable3 = new Table());
+        var oTestTable4 = (this._oTestTable5 = new sap.ui.table.Table());
         this.testTable2 = new Table();
         this.aLastYearMonth = [];
         this.aCurrentYearMonth = [];
@@ -54,7 +55,7 @@ sap.ui.define(
         var sNavMode = oTestTable.getNavigationMode();
         var iSelectedIndex = oTestTable.getSelectedIndex();
         var oTest2Table = oTestTable;
-        var iTest2 = oTest2Table.getSelectedIndex();
+        var iTest2 = this._oTestTable3.getSelectedIndex();
         this.aFullYearMonth = [];
         this.getView().setModel(new JSONModel(), "salesModel");
         this._oResourceBundle = this.getOwnerComponent()

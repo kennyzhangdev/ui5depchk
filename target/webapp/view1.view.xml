@@ -61,7 +61,7 @@
                   formatter: '.formatter.getActionPermissionByStatusFunctionPoint'}" press="onDeleteButtonPress"/>
       </f:actions>
     </f:DynamicPageTitle>
-    <commons:Toolbar standalone="true">
+    <commons:Toolbar standalone="true" id="testToolbar">
       <commons:ToggleButton pressed="true">
       </commons:ToggleButton>
     </commons:Toolbar>

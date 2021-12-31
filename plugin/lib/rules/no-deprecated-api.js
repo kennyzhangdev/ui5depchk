@@ -53,12 +53,12 @@ module.exports = {
         );
         return {};
       }
-      var options = context.options;
+      let options = context.options;
       if (options.length > 0 && options[0].ui5version) {
         ui5version = options[0].ui5version;
       }
 
-      console.log("Target UI5 version is: " + ui5version);
+      console.debug("Target UI5 version is: " + ui5version);
 
       Object.entries(DEPRECATED_API).forEach(([key, value]) => {
         if (
@@ -92,7 +92,7 @@ module.exports = {
      * @returns {void}
      */
     function validateModule(node) {
-      var oArrayExpressionNode, oFunctionExpressionNode;
+      let oArrayExpressionNode, oFunctionExpressionNode;
       if (!node.body[0].expression.arguments) {
         return; //node type "AssignmentExpression"
       }
@@ -120,9 +120,9 @@ module.exports = {
         return;
       }
 
-      var aModule = oArrayExpressionNode.elements;
+      let aModule = oArrayExpressionNode.elements;
       for (let i = 0; i < aModule.length; i++) {
-        var sModule = aModule[i].value;
+        let sModule = aModule[i].value;
 
         //Ignore non-SAP control
         if (sModule.indexOf("sap") === -1) {
@@ -132,7 +132,7 @@ module.exports = {
         let sStdModule = sModule.replace(/\//g, "."); //sap/m/Table -> sap.m.Table
         //Incase AMD module more than function parameters
         if (oFunctionExpressionNode.params[i]) {
-          var sVariableName = oFunctionExpressionNode.params[i].name;
+          let sVariableName = oFunctionExpressionNode.params[i].name;
           mModule[sVariableName] = sStdModule;
 
           checkDeprecation(aModule[i], sStdModule, "");
@@ -148,8 +148,8 @@ module.exports = {
      * @returns {void}
      */
     function checkDeprecation(node, module, method) {
-      // console.debug("-------------------------------------------");
-      // console.debug(node.loc.start.line + "|" + module + "|" + method);
+      console.debug("-------------------------------------------");
+      console.debug(node.loc.start.line + "|" + module + "|" + method);
 
       if (!module) {
         return;
@@ -205,42 +205,119 @@ module.exports = {
      * @returns {void}
      */
     function processDeclareVariable(node) {
-      var oVariableDeclarator = node.declarations[0];
-
       //Ignore for(var i in array)
       if (node.parent.type === "ForInStatement") {
         return;
       }
-      //Ignore variable definition only, like: var a;
-      if (!oVariableDeclarator.init) {
-        return;
-      }
 
-      var sVariableName = oVariableDeclarator.id.name;
-      //Ignore statement like: var sNavMode = oTestTable.getNavigationMode();
-      if (oVariableDeclarator.init.type === "Identifier") {
-        //Check statement: var oTable1 = oTable2
-        var sRightVariableName = oVariableDeclarator.init.name;
-        mVariableModule[sVariableName] = mVariableModule[sRightVariableName];
-      } else if (oVariableDeclarator.init.type === "NewExpression") {
-        //Check statement: var oTable1 = new sap.ui.table.Table();
-        var sStdModule;
-        var sClassName = oVariableDeclarator.init.callee.name;
-        if (sClassName) {
-          sStdModule = mModule[sClassName];
-        } else {
-          sStdModule = _moduleFromMemberExpression(
-            oVariableDeclarator.init.callee,
-            ""
-          );
-        }
-        if (!sStdModule) {
-          // console.log(sClassName + " is not a SAPUI5 module");
+      let aDeclearation = node.declarations;
+      aDeclearation.forEach((oVariableDeclarator) => {
+        //Ignore variable definition only, like: var a;
+        if (!oVariableDeclarator.init) {
           return;
         }
+        let sVariableName = _assignNode(oVariableDeclarator.id);
+        let sClassName = _assignNode(oVariableDeclarator.init);
+        if (sClassName) {
+          let sStdModule = mModule[sClassName];
+          mVariableModule[sVariableName] = sStdModule; //Todo: oTestTable4 not resolved. this.oTable6 needs to validate
+        }
+      });
+    }
 
+    /**
+     * In an assignment expression, store the variable and module mapping, then return Classname
+     * @param {ASTNode} node The node we are checking for SAPUI5 module usage.
+     * @returns {String} Variable class name, like 'Table'
+     */
+    function _assignmentExp(node) {
+      _validateNode(node, "AssignmentExpression");
+
+      let sVariableName = _assignNode(node.left);
+      let sClassName = _assignNode(node.right);
+      //Process assignment logic, return right value
+      if (sClassName) {
+        let sStdModule = mModule[sClassName];
         mVariableModule[sVariableName] = sStdModule;
       }
+
+      return sClassName;
+    }
+
+    function _assignNode(node) {
+      switch (node.type) {
+        case "Identifier":
+          return _identifier(node);
+
+        case "AssignmentExpression":
+          return _assignmentExp(node);
+
+        case "MemberExpression":
+          return _memberExp(node);
+        case "NewExpression":
+          return _newExp(node);
+        case "ThisExpression":
+          return _thisExp(node);
+        default:
+          return;
+      }
+    }
+    function _newExp(node) {
+      _validateNode(node, "NewExpression");
+      let sClassName = _assignNode(node.callee);
+      return sClassName;
+    }
+    function _thisExp(node) {
+      _validateNode(node, "ThisExpression");
+
+      return "this";
+    }
+
+    function _validateNode(node, sType) {
+      if (node.type !== sType) {
+        throw new Error(
+          "node is not " +
+            sType +
+            ": [" +
+            node.loc.start.line +
+            "," +
+            node.loc.start.column +
+            "]"
+        );
+      }
+    }
+    function _memberExp(node) {
+      _validateNode(node, "MemberExpression");
+      if (node.object) {
+        return _assignNode(node.object) + "." + _assignNode(node.property);
+      }
+      return _assignNode(node.property);
+    }
+    /**
+     * Extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
+     * This is done in traverse approach.
+     * @param {ASTNode} node The node like 'sap'. Its child will be 'ui'
+     * @param {String} sChildName The child name. 'ODataModel' -> 'odata.ODataModel' -> 'model.odata.ODataModel' etc.
+     * @returns {String} Extracted module name like: 'sap.ui.model.odata.ODataModel'
+     */
+    function _moduleFromMemberExpression(node, sChildName) {
+      if (node.object) {
+        return _moduleFromMemberExpression(
+          node.object,
+          sChildName === ""
+            ? node.property.name
+            : node.property.name + "." + sChildName
+        );
+      } else if (node.type === "ThisExpression") {
+        return sChildName;
+      } else {
+        return sChildName === "" ? node.name : node.name + "." + sChildName;
+      }
+    }
+
+    function _identifier(node) {
+      _validateNode(node, "Identifier");
+      return node.name;
     }
 
     /**
@@ -252,6 +329,15 @@ module.exports = {
     function processAssignedVariable(node) {
       //node.left.type === "Identifier"
 
+      let sVariableName = _assignNode(node.left);
+      let sClassName = _assignNode(node.right);
+      if (sClassName) {
+        let sStdModule = mModule[sClassName];
+        mVariableModule[sVariableName] = sStdModule;
+      }
+
+      /*
+      
       var sVariableName;
       //var a; a = new Table();
       if (node.left.type === "Identifier") {
@@ -276,6 +362,7 @@ module.exports = {
       }
 
       mVariableModule[sVariableName] = sStdModule;
+      */
     }
 
     /**
@@ -288,25 +375,38 @@ module.exports = {
       if (!node.callee || !node.callee.object) {
         return;
       }
-      var sStdModule, sMethodName;
-
-      //Check static method jQuery.sap.log.debug("123");
-      if (node.callee.object.type === "MemberExpression") {
-        //Variable method like this.oTable.getSelectedIndex() should also process
-        let sModuleMethod = _moduleFromMemberExpression(node.callee, "");
-        [sStdModule, sMethodName] = _staticModuleMethod(sModuleMethod); //sStdModule may also be variable name
-        if (mVariableModule[sStdModule]) {
-          sStdModule = mVariableModule[sStdModule];
-        }
-      } else if (node.callee.object.type === "Identifier") {
-        var sVariableName = node.callee.object.name;
-        sStdModule = mVariableModule[sVariableName];
-        if (!sStdModule) {
-          sStdModule = mModule[sVariableName]; //Code like: Controller.extend
-        }
-        sMethodName = node.callee.property.name;
+      var sClassName, sStdModule, sMethodName;
+      var sModuleMethod = _assignNode(node.callee);
+      [sClassName, sMethodName] = _staticModuleMethod(sModuleMethod); //sClassName may also be variable/ClassName/Module name
+      if (mVariableModule[sClassName]) {
+        sStdModule = mVariableModule[sClassName];
+      } else if (mModule[sClassName]) {
+        sStdModule = mModule[sClassName];
+      } else {
+        sStdModule = sClassName;
       }
+
+      sMethodName = _assignNode(node.callee.property);
       checkDeprecation(node, sStdModule, sMethodName);
+
+      // //Check static method jQuery.sap.log.debug("123");
+      // if (node.callee.object.type === "MemberExpression") {
+      //   //Variable method like this.oTable.getSelectedIndex() should also process
+
+      //   let sModuleMethod = _assignNode(node.callee);
+      //   [sStdModule, sMethodName] = _staticModuleMethod(sModuleMethod); //sStdModule may also be variable name
+      //   if (mVariableModule[sStdModule]) {
+      //     sStdModule = mVariableModule[sStdModule];
+      //   }
+      // } else if (node.callee.object.type === "Identifier") {
+      //   var sVariableName = _assignNode(node.callee.object);
+      //   sStdModule = mVariableModule[sVariableName];
+      //   if (!sStdModule) {
+      //     sStdModule = mModule[sVariableName]; //Code like: Controller.extend
+      //   }
+      //   sMethodName = _assignNode(node.callee.property);
+      // }
+      // checkDeprecation(node, sStdModule, sMethodName);
     }
 
     /**
@@ -315,9 +415,9 @@ module.exports = {
      * @returns {void}
      */
     function validateXMLView(node) {
-      var oRootNode = node.root;
+      let oRootNode = node.root;
       // var sXML = node.root.value;
-      var aRootAttribute = oRootNode.attributes;
+      let aRootAttribute = oRootNode.attributes;
       mViewNS = {}; //Reset mViewNS. Different XML view may have different NS definition
       aRootAttribute.forEach((element) => {
         if (element.attributeName.value.indexOf("xmlns") > -1) {
@@ -336,10 +436,10 @@ module.exports = {
      */
     function _validateViewControl(node) {
       if (node.type === "HTMLElement") {
-        var sTagName = node.tagName;
-        var aTagName = sTagName.split(":"); //key is XML control name,like: "mvc:View", or just "View"
-        var sNameSpace = "";
-        var sControl = "";
+        let sTagName = node.tagName;
+        let aTagName = sTagName.split(":"); //key is XML control name,like: "mvc:View", or just "View"
+        let sNameSpace = "";
+        let sControl = "";
         if (aTagName.length === 1) {
           sControl = aTagName[0];
         } else {
@@ -379,27 +479,6 @@ module.exports = {
       }
     }
 
-    /**
-     * Extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
-     * This is done in traverse approach.
-     * @param {ASTNode} node The node like 'sap'. Its child will be 'ui'
-     * @param {String} sChildName The child name. 'ODataModel' -> 'odata.ODataModel' -> 'model.odata.ODataModel' etc.
-     * @returns {String} Extracted module name like: 'sap.ui.model.odata.ODataModel'
-     */
-    function _moduleFromMemberExpression(node, sChildName) {
-      if (node.object) {
-        return _moduleFromMemberExpression(
-          node.object,
-          sChildName === ""
-            ? node.property.name
-            : node.property.name + "." + sChildName
-        );
-      } else if (node.type === "ThisExpression") {
-        return sChildName;
-      } else {
-        return sChildName === "" ? node.name : node.name + "." + sChildName;
-      }
-    }
     return {
       //UI5 AMD control validate
       Program(node) {
