@@ -155,7 +155,7 @@ module.exports = {
 
       let aModule = oArrayExpressionNode.elements;
       for (let i = 0; i < aModule.length; i++) {
-        let sModule = aModule[i].value;
+        let sModule = _assignNode(aModule[i]);
 
         //Ignore non-SAP control
         if (sModule.indexOf("sap") === -1) {
@@ -343,7 +343,8 @@ module.exports = {
       switch (node.type) {
         case "Identifier":
           return _identifier(node);
-
+        case "Literal":
+          return _literal(node);
         case "AssignmentExpression":
           return _assignmentExp(node);
 
@@ -369,6 +370,16 @@ module.exports = {
     function _identifier(node) {
       _validateNode(node, "Identifier");
       return node.name;
+    }
+
+    /**
+     * Return node value of AST Literal node.
+     * @param {ASTNode} node The Literal node
+     * @returns {String} Node value, like a normal String "abc"
+     */
+    function _literal(node) {
+      _validateNode(node, "Literal");
+      return node.value;
     }
 
     /**
