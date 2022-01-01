@@ -92,18 +92,44 @@ module.exports = {
      * @returns {void}
      */
     function validateModule(node) {
-      let oArrayExpressionNode, oFunctionExpressionNode;
-      if (!node.body[0].expression.arguments) {
-        return; //node type "AssignmentExpression"
+      let aRootStatement = node.body;
+      let aDefArgument;
+      for (let i = 0; i < aRootStatement.length; i++) {
+        let oStatement = aRootStatement[i];
+        if (
+          oStatement.type === "ExpressionStatement" &&
+          oStatement.expression.type === "CallExpression"
+        ) {
+          let oCallExp = oStatement.expression;
+          let sCalleeName = _assignNode(oCallExp.callee);
+          if (sCalleeName === "sap.ui.define") {
+            aDefArgument = oCallExp.arguments;
+            break;
+          }
+        }
       }
-      node.body[0].expression.arguments.forEach(function (argument) {
+      if (!aDefArgument) {
+        context.report({
+          node: node,
+          message:
+            "SAPUI5 AMD Definition is not used, add this file to .eslintignore if it is not SAPUI5 code"
+        });
+        return; //AMD is not used, ignore module validation
+      }
+
+      let oArrayExpressionNode, oFunctionExpressionNode;
+      //sap.ui.define may have 4 parameters -> function ui5Define(sModuleName, aDependencies, vFactory, bExport)
+      //Extract array and function
+      aDefArgument.forEach(function (argument) {
         if (argument.type === "ArrayExpression") {
           oArrayExpressionNode = argument;
         } else if (argument.type === "FunctionExpression") {
           oFunctionExpressionNode = argument;
         }
       });
-
+      if (!oArrayExpressionNode || !oFunctionExpressionNode) {
+        return; //No module is loaded
+      }
       if (
         oArrayExpressionNode.elements.length !==
         oFunctionExpressionNode.params.length

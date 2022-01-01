@@ -1,7 +1,7 @@
 {
   "name": "eslint-plugin-ui5depchk",
-  "version": "0.2.1",
-  "description": "Check deprecated API usage for a specific SAPUI5 version",
+  "version": "0.3.0",
+  "description": "Check deprecated SAPUI5 API usage for a specific SAPUI5 version",
   "homepage": "https://github.com/kennyzhangdev/ui5depchk",
   "repository": {
     "type": "git",

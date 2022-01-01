@@ -1,5 +1,5 @@
 /**
- * @fileoverview Check deprecated API usage for a specific SAPUI5 version
+ * @fileoverview Check deprecated SAPUI5 API usage for a specific SAPUI5 version
  * @author eslint-plugin-ui5depchk
  */
 "use strict";

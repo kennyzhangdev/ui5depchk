@@ -1,3 +1,4 @@
+var a = 1;
 sap.ui.define(
   [
     "jquery.sap.global",
