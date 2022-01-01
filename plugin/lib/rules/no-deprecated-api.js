@@ -148,8 +148,8 @@ module.exports = {
      * @returns {void}
      */
     function checkDeprecation(node, module, method) {
-      console.debug("-------------------------------------------");
-      console.debug(node.loc.start.line + "|" + module + "|" + method);
+      // console.debug("-------------------------------------------");
+      // console.debug(node.loc.start.line + "|" + module + "|" + method);
 
       if (!module) {
         return;
@@ -183,18 +183,8 @@ module.exports = {
      * @returns {void}
      */
     function validateNew(node) {
-      var sStdModule;
-      var sClassName = node.callee.name;
-      if (sClassName) {
-        sStdModule = mModule[sClassName];
-      } else {
-        sStdModule = _moduleFromMemberExpression(node.callee, "");
-      }
-      //Ignore non-SAPUI5 control
-      if (!sStdModule) {
-        // console.debug(sClassName + " is not a SAPUI5 module");
-        return;
-      }
+      let sStdModule = _assignNode(node.callee);
+      sStdModule = _StdModule(sStdModule);
       checkDeprecation(node, sStdModule, "");
     }
 
@@ -217,107 +207,12 @@ module.exports = {
           return;
         }
         let sVariableName = _assignNode(oVariableDeclarator.id);
-        let sClassName = _assignNode(oVariableDeclarator.init);
-        if (sClassName) {
-          let sStdModule = mModule[sClassName];
+        let sStdModule = _assignNode(oVariableDeclarator.init); //sStdModule can be like "Table" or "sap.ui.table.Table", or "oTestTable"
+        if (sStdModule) {
+          sStdModule = _StdModule(sStdModule);
           mVariableModule[sVariableName] = sStdModule; //Todo: oTestTable4 not resolved. this.oTable6 needs to validate
         }
       });
-    }
-
-    /**
-     * In an assignment expression, store the variable and module mapping, then return Classname
-     * @param {ASTNode} node The node we are checking for SAPUI5 module usage.
-     * @returns {String} Variable class name, like 'Table'
-     */
-    function _assignmentExp(node) {
-      _validateNode(node, "AssignmentExpression");
-
-      let sVariableName = _assignNode(node.left);
-      let sClassName = _assignNode(node.right);
-      //Process assignment logic, return right value
-      if (sClassName) {
-        let sStdModule = mModule[sClassName];
-        mVariableModule[sVariableName] = sStdModule;
-      }
-
-      return sClassName;
-    }
-
-    function _assignNode(node) {
-      switch (node.type) {
-        case "Identifier":
-          return _identifier(node);
-
-        case "AssignmentExpression":
-          return _assignmentExp(node);
-
-        case "MemberExpression":
-          return _memberExp(node);
-        case "NewExpression":
-          return _newExp(node);
-        case "ThisExpression":
-          return _thisExp(node);
-        default:
-          return;
-      }
-    }
-    function _newExp(node) {
-      _validateNode(node, "NewExpression");
-      let sClassName = _assignNode(node.callee);
-      return sClassName;
-    }
-    function _thisExp(node) {
-      _validateNode(node, "ThisExpression");
-
-      return "this";
-    }
-
-    function _validateNode(node, sType) {
-      if (node.type !== sType) {
-        throw new Error(
-          "node is not " +
-            sType +
-            ": [" +
-            node.loc.start.line +
-            "," +
-            node.loc.start.column +
-            "]"
-        );
-      }
-    }
-    function _memberExp(node) {
-      _validateNode(node, "MemberExpression");
-      if (node.object) {
-        return _assignNode(node.object) + "." + _assignNode(node.property);
-      }
-      return _assignNode(node.property);
-    }
-    /**
-     * Extract global variable like sap.ui.model.odata.ODataModel from new sap.ui.model.odata.ODataModel();
-     * This is done in traverse approach.
-     * @param {ASTNode} node The node like 'sap'. Its child will be 'ui'
-     * @param {String} sChildName The child name. 'ODataModel' -> 'odata.ODataModel' -> 'model.odata.ODataModel' etc.
-     * @returns {String} Extracted module name like: 'sap.ui.model.odata.ODataModel'
-     */
-    function _moduleFromMemberExpression(node, sChildName) {
-      if (node.object) {
-        return _moduleFromMemberExpression(
-          node.object,
-          sChildName === ""
-            ? node.property.name
-            : node.property.name + "." + sChildName
-        );
-      } else if (node.type === "ThisExpression") {
-        return sChildName;
-      } else {
-        return sChildName === "" ? node.name : node.name + "." + sChildName;
-      }
-    }
-
-    function _identifier(node) {
-      _validateNode(node, "Identifier");
-      return node.name;
     }
 
     /**
@@ -326,43 +221,13 @@ module.exports = {
      * @param {ASTNode} node The node contains a varable assignment statement like: this.oTable = new sap.ui.table.Table. Or, this.oTable = new Table();
      * @returns {void}
      */
-    function processAssignedVariable(node) {
-      //node.left.type === "Identifier"
-
+    function processAssignment(node) {
       let sVariableName = _assignNode(node.left);
-      let sClassName = _assignNode(node.right);
-      if (sClassName) {
-        let sStdModule = mModule[sClassName];
+      let sStdModule = _assignNode(node.right);
+      if (sStdModule) {
+        sStdModule = _StdModule(sStdModule);
         mVariableModule[sVariableName] = sStdModule;
       }
-
-      /*
-      
-      var sVariableName;
-      //var a; a = new Table();
-      if (node.left.type === "Identifier") {
-        sVariableName = node.left.name;
-      } else if (node.left.type === "MemberExpression") {
-        sVariableName = node.left.property.name;
-      }
-      if (node.right.type !== "NewExpression") {
-        return;
-      }
-
-      var sClassName = node.right.callee.name;
-      var sStdModule;
-      if (sClassName) {
-        sStdModule = mModule[sClassName];
-      } else {
-        if (node.right.type === "NewExpression") {
-          sStdModule = _moduleFromMemberExpression(node.right.callee, "");
-        } else {
-          sStdModule = _moduleFromMemberExpression(node.right.init.callee, "");
-        }
-      }
-
-      mVariableModule[sVariableName] = sStdModule;
-      */
     }
 
     /**
@@ -388,25 +253,6 @@ module.exports = {
 
       sMethodName = _assignNode(node.callee.property);
       checkDeprecation(node, sStdModule, sMethodName);
-
-      // //Check static method jQuery.sap.log.debug("123");
-      // if (node.callee.object.type === "MemberExpression") {
-      //   //Variable method like this.oTable.getSelectedIndex() should also process
-
-      //   let sModuleMethod = _assignNode(node.callee);
-      //   [sStdModule, sMethodName] = _staticModuleMethod(sModuleMethod); //sStdModule may also be variable name
-      //   if (mVariableModule[sStdModule]) {
-      //     sStdModule = mVariableModule[sStdModule];
-      //   }
-      // } else if (node.callee.object.type === "Identifier") {
-      //   var sVariableName = _assignNode(node.callee.object);
-      //   sStdModule = mVariableModule[sVariableName];
-      //   if (!sStdModule) {
-      //     sStdModule = mModule[sVariableName]; //Code like: Controller.extend
-      //   }
-      //   sMethodName = _assignNode(node.callee.property);
-      // }
-      // checkDeprecation(node, sStdModule, sMethodName);
     }
 
     /**
@@ -426,6 +272,144 @@ module.exports = {
         }
       });
       _validateViewControl(node.root);
+    }
+
+    //------------------------------------------------------------------------------
+    // Internal function
+    //------------------------------------------------------------------------------
+
+    /**
+     * Return standard module name from a variable/class/module name.
+     * @param {String} sName The variable/class/module name, like: oTable/Table/sap.ui.table.Table
+     * @returns {String} Standard module name like sap.ui.table.Table
+     */
+    function _StdModule(sName) {
+      if (!sName) {
+        return;
+      }
+      let sStdModule;
+      //sName is variable name like oTable
+      if (mVariableModule[sName]) {
+        sStdModule = mVariableModule[sName];
+        //sName is Class name like: Table
+      } else if (mModule[sName]) {
+        sStdModule = mModule[sName];
+      } else {
+        //sName is module name: sap.ui.table.Table
+        sStdModule = sName;
+      }
+      return sStdModule;
+    }
+
+    /**
+     * Assign AST node to the processing function based on its type
+     * @param {ASTNode} node The node to be assigned.
+     * @returns {String} Processing result, usually a variable/class/module name;
+     */
+    function _assignNode(node) {
+      switch (node.type) {
+        case "Identifier":
+          return _identifier(node);
+
+        case "AssignmentExpression":
+          return _assignmentExp(node);
+
+        case "MemberExpression":
+          return _memberExp(node);
+
+        case "NewExpression":
+          return _newExp(node);
+
+        case "ThisExpression":
+          return _thisExp(node);
+
+        default:
+          return;
+      }
+    }
+
+    /**
+     * Return node name of AST Identifier node.
+     * @param {ASTNode} node The Identifier node
+     * @returns {String} Node name
+     */
+    function _identifier(node) {
+      _validateNode(node, "Identifier");
+      return node.name;
+    }
+
+    /**
+     * In an assignment expression, store the variable and module mapping, then return Classname
+     * @param {ASTNode} node The node we are checking for SAPUI5 module usage.
+     * @returns {String} Variable class name, like 'Table'
+     */
+    function _assignmentExp(node) {
+      _validateNode(node, "AssignmentExpression");
+
+      let sVariableName = _assignNode(node.left);
+      let sStdModule = _assignNode(node.right);
+      //Process assignment logic, return right value
+      if (sStdModule) {
+        sStdModule = _StdModule(sStdModule);
+        mVariableModule[sVariableName] = sStdModule;
+      }
+
+      return sStdModule;
+    }
+
+    /**
+     * Process MemberExpression to get its full name.
+     * @param {ASTNode} node MemberExpression node.
+     * @returns {String} Fullname, can be like: jQuery.sap.log.debug/sap.ui.table.Table/oTestTable.getNavigationMode
+     */
+    function _memberExp(node) {
+      _validateNode(node, "MemberExpression");
+      if (node.object) {
+        return _assignNode(node.object) + "." + _assignNode(node.property);
+      }
+      return _assignNode(node.property);
+    }
+
+    /**
+     * Get class/module name from a new expression
+     * @param {ASTNode} node The NewExpression node.
+     * @returns {String} Processing result, class/module name;
+     */
+    function _newExp(node) {
+      _validateNode(node, "NewExpression");
+      let sClassName = _assignNode(node.callee);
+      return sClassName;
+    }
+
+    /**
+     * Get "this" from a ThisExpression
+     * @param {ASTNode} node ThisExpression node.
+     * @returns {String} The string "this";
+     */
+    function _thisExp(node) {
+      _validateNode(node, "ThisExpression");
+      return "this";
+    }
+
+    /**
+     * Validate a AST node against its type. Validation failure usually indicates a program bug.
+     * @param {ASTNode} node Node to be validated.
+     * @param {String} sType Node type to be validated.
+     * @throws {Error} Error indicating the node location
+     * @returns {void}
+     */
+    function _validateNode(node, sType) {
+      if (node.type !== sType) {
+        throw new Error(
+          "node is not " +
+            sType +
+            ": [" +
+            node.loc.start.line +
+            "," +
+            node.loc.start.column +
+            "]"
+        );
+      }
     }
 
     /**
@@ -499,10 +483,9 @@ module.exports = {
           console.debug(error);
         }
       },
-
       AssignmentExpression(node) {
         try {
-          processAssignedVariable(node);
+          processAssignment(node);
         } catch (error) {
           console.debug(error);
         }

@@ -38,12 +38,15 @@ sap.ui.define(
       _rootPath: jQuery.sap.getModulePath("sd.ModelMonthSales"),
 
       onInit: function () {
+        var oTestTable = (this._oTestTable3 = new Table());
+        var oTest2Table = oTestTable;
+        var oTestTable4 = (this._oTestTable5 = new sap.ui.table.Table());
+        this.oTestTable5 = this._oTestTable6 = new Table();
+
         var oDateFormat = DateFormat.getDateTimeInstance({
           pattern: "yyyyMMdd"
         });
-        this.oTestTable5 = this._oTestTable6 = new Table();
-        var oTestTable = (this._oTestTable3 = new Table());
-        var oTestTable4 = (this._oTestTable5 = new sap.ui.table.Table());
+
         this.testTable2 = new Table();
         this.aLastYearMonth = [];
         this.aCurrentYearMonth = [];
@@ -54,7 +57,7 @@ sap.ui.define(
         var oModel3 = new sap.ui.model.odata.ODataModel();
         var sNavMode = oTestTable.getNavigationMode();
         var iSelectedIndex = oTestTable.getSelectedIndex();
-        var oTest2Table = oTestTable;
+
         var iTest2 = this._oTestTable3.getSelectedIndex();
         this.aFullYearMonth = [];
         this.getView().setModel(new JSONModel(), "salesModel");
