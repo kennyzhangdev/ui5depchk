@@ -1,4 +1,11 @@
 /**
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+/**
  * @fileoverview Check deprecated SAPUI5 API usage for a specific SAPUI5 version
  * @author eslint-plugin-ui5depchk
  */

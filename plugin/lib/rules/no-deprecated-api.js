@@ -1,4 +1,11 @@
 /**
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
+/**
  * @fileoverview Rule to disallow deprecated SAPUI5 api
  * @author Kenny Zhang
  */
