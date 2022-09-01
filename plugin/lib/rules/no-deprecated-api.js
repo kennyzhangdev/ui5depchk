@@ -16,7 +16,7 @@
 // Requirements
 //------------------------------------------------------------------------------
 const storage = require("node-persist");
-
+const axios = require("axios");
 //------------------------------------------------------------------------------
 // Rule Definition
 //------------------------------------------------------------------------------
@@ -28,6 +28,8 @@ var DEPRECATED_API = {};
 var aApis = [];
 var mViewNS = {};
 var ui5version = "latest";
+var bAPIInit = false;
+const API_TOKEN = "API";
 
 storage.initSync();
 
@@ -51,16 +53,40 @@ module.exports = {
   },
 
   create: function (context) {
+    let options = context.options;
+    if (!storage.getItemSync(API_TOKEN) && !bAPIInit) {
+      //Call API only once
+      bAPIInit = true;
+      let apiUrl =
+        "https://sapui5.hana.ondemand.com/docs/api/api-index-deprecated.json";
+
+      if (options.length > 0 && options[0].ui5DepreacatedURL) {
+        apiUrl = options[0].ui5DepreacatedURL;
+      }
+      // console.log("Initial Url is: " + apiUrl);
+      axios
+        .get(apiUrl)
+        .then(function (response) {
+          // handle success
+          storage.setItemSync(API_TOKEN, response.data);
+          console.log("Initial data loaded. Please retry.");
+        })
+        .catch(function (error) {
+          // handle error
+          console.log(error);
+        });
+    }
+
     //Assemble deprecated API only once
     if (aApis.length === 0) {
-      DEPRECATED_API = storage.getItemSync("API");
+      DEPRECATED_API = storage.getItemSync(API_TOKEN);
       if (!DEPRECATED_API) {
         console.log(
-          "uidepchk plugin is loading initial data, please retry later."
+          "uidepchk plugin is loading initial data, please retry after data loaded."
         );
         return {};
       }
-      let options = context.options;
+
       if (options.length > 0 && options[0].ui5version) {
         ui5version = options[0].ui5version;
       }

@@ -16,28 +16,30 @@
 //------------------------------------------------------------------------------
 
 const requireIndex = require("requireindex");
-const axios = require("axios");
-const storage = require("node-persist");
 
 //------------------------------------------------------------------------------
 // Plugin Definition
 //------------------------------------------------------------------------------
 
-storage.initSync();
-if (!storage.getItemSync("API")) {
-  const apiUrl =
-    "https://sapui5.hana.ondemand.com/docs/api/api-index-deprecated.json";
-  axios
-    .get(apiUrl)
-    .then(function (response) {
-      // handle success
-      storage.setItemSync("API", response.data);
-    })
-    .catch(function (error) {
-      // handle error
-      console.log(error);
-    });
-}
+// storage.initSync();
+// if (!storage.getItemSync("API")) {
+//   let apiUrl =
+//     "https://sapui5.hana.ondemand.com/docs/api/api-index-deprecated.json";
+//   // let options = context.options;
+//   // if (options.length > 0 && options[0].ui5DepreacatedURL) {
+//   //   apiUrl = options[0].ui5DepreacatedURL;
+//   // }
+//   axios
+//     .get(apiUrl)
+//     .then(function (response) {
+//       // handle success
+//       storage.setItemSync("API", response.data);
+//     })
+//     .catch(function (error) {
+//       // handle error
+//       console.log(error);
+//     });
+// }
 
 module.exports = {
   rules: requireIndex(__dirname + "/rules"),

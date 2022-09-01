@@ -3,12 +3,22 @@
     "ecmaVersion": 2018
   },
   "rules": {
-    "ui5depchk/no-deprecated-api": ["warn",{"ui5version":"1.84"}]
+    "ui5depchk/no-deprecated-api": [
+      "warn",
+      {
+        "ui5version": "1.84",
+        "ui5DepreacatedURL": "https://ui5.sap.com/docs/api/api-index-deprecated.json"
+      }
+    ]
+  },
+  "settings": {
+    "ui5depchk": {}
   },
   "plugins": ["ui5depchk"],
-  "overrides": [{
-    "files": "*.view.xml",
-    "parser": "eslint-xml-parser"
-  }]
-  
+  "overrides": [
+    {
+      "files": "*.view.xml",
+      "parser": "eslint-xml-parser"
+    }
+  ]
 }

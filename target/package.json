@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "eslint": "^8.5.0",
+    "eslint": "^8.23.0",
     "eslint-plugin-ui5depchk": "file:../plugin",
     "eslint-xml-parser": "^0.1.1"
   }

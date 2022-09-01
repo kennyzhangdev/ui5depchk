@@ -60,6 +60,22 @@ Add parameter `ui5version` if you want to validate against a specific SAPUI5 ver
 }
 ```
 
+In case you want custom deprecated API, add optional parameter `ui5DepreacatedURL`.
+
+```json
+{
+  "rules": {
+    "ui5depchk/no-deprecated-api": [
+      "warn",
+      {
+        "ui5version": "1.84",
+        "ui5DepreacatedURL": "https://ui5.sap.com/docs/api/api-index-deprecated.json"
+      }
+    ]
+  }
+}
+```
+
 Use `.eslintignore` to ignore non-SAPUI5 code to avoid unexpected error.
 
 If you see "plugin is loading initial data", just retry. This only happens for the first time plugin loaded.
