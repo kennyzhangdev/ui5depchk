@@ -83,7 +83,8 @@ If you see "plugin is loading initial data", just retry. This only happens for t
 Due to the dependency on module `node-persist`, a `.node-persist` folder will be created. Ignore this path in your `.gitignore`
 
 From ESLint 9.0.0, `.eslintrc` is deprecated. Use `eslint.config.mjs` instead.
-Refer to target folder for sample code.
+Refer to target folder in Git repo for sample code.
+https://github.com/kennyzhangdev/ui5depchk
 
 After configuration, run below command to get report.
 
