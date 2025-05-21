@@ -6,7 +6,7 @@
     "ui5depchk/no-deprecated-api": [
       "warn",
       {
-        "ui5version": "1.84",
+        "ui5version": "1.120",
         "ui5DepreacatedURL": "https://ui5.sap.com/docs/api/api-index-deprecated.json"
       }
     ]

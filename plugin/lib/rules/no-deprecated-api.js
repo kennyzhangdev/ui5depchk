@@ -96,7 +96,7 @@ module.exports = {
       Object.entries(DEPRECATED_API).forEach(([key, value]) => {
         if (
           ui5version === "latest" ||
-          parseFloat(key) <= parseFloat(ui5version)
+          _isEqualOrLowerVersion(key, ui5version)
         ) {
           aApis = aApis.concat(value.apis);
         }
@@ -531,6 +531,23 @@ module.exports = {
           sModuleMethod.substring(lastIndex + 1)
         ];
       }
+    }
+
+    /**
+     * Compare version1 and version2. When version1 is <= version2, return true, vice versa.
+     * @param {String} version1 The current UI5 version name. Should be "<Major>.<Minor>"
+     * @param {String} version2 The target UI5 version name. Should be "<Major>.<Minor>"
+     * @returns {Boolean} Whether version1 is lower or equal to version 2
+     */
+    function _isEqualOrLowerVersion(version1, version2) {
+      let aVersion1 = version1.split(".");
+      let aVersion2 = version2.split(".");
+      //Compare major version. Not likely to have a result as current UI5 version is 1.XX
+      if (parseInt(aVersion1[0]) !== parseInt(aVersion2[0])) {
+        return parseInt(aVersion1[0]) < parseInt(aVersion2[0]);
+      }
+      //Compare minor version
+      return parseInt(aVersion1[1]) < parseInt(aVersion2[1]);
     }
 
     return {
